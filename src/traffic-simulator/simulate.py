@@ -113,10 +113,11 @@ def initialize_lights(indexs):
         else:
             traffic_lights[indexs].changeLights(indexs)
 
+def lightsChange2():
+    traffic_light_thread = threading.Thread(name="initialization", target=initialize_lights, args=(10,))
+    traffic_light_thread.daemon = True
+    traffic_light_thread.start()
 
-traffic_light_thread = threading.Thread(name="initialization", target=initialize_lights, args=(10,))
-traffic_light_thread.daemon = True
-traffic_light_thread.start()
 
 def lightsChange1():
     traffic_light_thread1 = threading.Thread(name="initialization1", target=initialize_lights, args=(0,))
@@ -135,7 +136,20 @@ def lightsChange1():
     traffic_light_thread4.daemon = True
     traffic_light_thread4.start()
 
-# lightsChange1()
+
+lightsChange1()
+lightsChange2()
+
+# def lightChangeAlter():
+#     while 1:
+        
+
+
+
+# traffic_light_thread5 = threading.Thread(name="initialization5", target=lightChangeAlter, args=())
+# traffic_light_thread5.daemon = True
+# traffic_light_thread5.start()
+
 
 # def lightsChange2():
 #     traffic_light_thread1 = threading.Thread(name="initialization1", target=initialize_lights, args=(0,))

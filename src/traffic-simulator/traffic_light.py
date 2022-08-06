@@ -20,9 +20,9 @@ class TrafficLight():
         self.txt_rect.center = self.pos 
         self.status = TrafficLightStatus[color]
         self.radius = 15
-        self.RedTime = 10
-        self.GreenTime = 10
-        self.YellowTime = 4
+        self.RedTime = 7
+        self.GreenTime = 5
+        self.YellowTime = 2
     
     def alterLights1(self, index):
         if index == 0 or index == 1:
@@ -63,10 +63,10 @@ class TrafficLight():
     
     def changeLights(self, index):
         # self.toggleLightStatus()
+        self.alterLights1(index)
         # print(index)
         self.alterLights2(index)
         # print(index)
-        # self.alterLights2(index)
         # sleep(5)
 
     # def changeLights(self):
