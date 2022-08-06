@@ -12,7 +12,6 @@ from time import sleep
 pygame.init()
 
 speed = [0, 0]
-
 black = 0, 0, 0
 
 screen = pygame.display.set_mode(size)
@@ -26,12 +25,12 @@ ballrect = ball.get_rect()
 traffic_lights = [
     TrafficLight(HEIGHT / 2 - ROAD_WIDTH / 2 * 1.4,
                  WIDTH / 2 - ROAD_WIDTH / 2 * 1.4, 'L','red'),
+    TrafficLight(HEIGHT / 2 - ROAD_WIDTH / 2 * 1.4,
+                 WIDTH / 2 + ROAD_WIDTH / 2 * 1.4, 'B','red'),
     TrafficLight(HEIGHT / 2 + ROAD_WIDTH / 2 * 1.4,
                  WIDTH / 2 + ROAD_WIDTH / 2 * 1.4, 'R','red'),
     TrafficLight(HEIGHT / 2 + ROAD_WIDTH / 2 * 1.4,
                  WIDTH / 2 - ROAD_WIDTH / 2 * 1.4, 'T','red'),
-    TrafficLight(HEIGHT / 2 - ROAD_WIDTH / 2 * 1.4,
-                 WIDTH / 2 + ROAD_WIDTH / 2 * 1.4, 'B','red'),
 ]
 
 # v1 = Vehicle(0.1, ROAD_WIDTH / 6, ROAD_WIDTH / 6, Lane.left, Direction.left, 
@@ -50,12 +49,25 @@ traffic_lights = [
 #              Direction.down)
 # v8 = Vehicle(0.1, ROAD_WIDTH / 6, ROAD_WIDTH / 6, Lane.right, Direction.down,
 #              Direction.right)
+vehicles_stopped = {
+    Direction.left : [],
+    Direction.down : [],
+    Direction.right : [],
+    Direction.up : [],
+}
 vehicles = []
 vehicles_dict = {
     Direction.left: {
         # Direction.right: [],
         # Direction.up: [],
         # Direction.down: []
+        Lane.left: [],
+        Lane.right: []
+    },
+    Direction.down: {
+        # Direction.left: [],
+        # Direction.right: [],
+        # Direction.up: []
         Lane.left: [],
         Lane.right: []
     },
@@ -73,21 +85,14 @@ vehicles_dict = {
         Lane.left: [],
         Lane.right: []
     },
-    Direction.down: {
-        # Direction.left: [],
-        # Direction.right: [],
-        # Direction.up: []
-        Lane.left: [],
-        Lane.right: []
-    }
 }
 
 def find_associate_light(vehicle):
     if vehicle.direction == Direction.left:
         return traffic_lights[0]
-    elif vehicle.direction == Direction.right:
+    elif vehicle.direction == Direction.down:
         return traffic_lights[1]
-    elif vehicle.direction == Direction.up:
+    elif vehicle.direction == Direction.right:
         return traffic_lights[2]
     return traffic_lights[3]
 
@@ -98,11 +103,11 @@ def generate_vehicle():
         lst = list(range(1, 5))
         del lst[direction.value - 1]
         dest_direciton = Direction(random.choice(lst))
-        vehicle = Vehicle(0.2, ROAD_WIDTH / 6, ROAD_WIDTH / 6, lane, direction, dest_direciton)
+        vehicle = Vehicle(0.17, ROAD_WIDTH / 6, ROAD_WIDTH / 6, lane, direction, dest_direciton)
         vehicles.append(vehicle)
         vehicles_dict[direction][lane].append(vehicle)
         # print(vehicles_dict)
-        sleep(1)
+        sleep(0.5)
 
 def initialize_lights(indexs):
     while True:
@@ -136,20 +141,29 @@ def lightsChange1():
     traffic_light_thread4.daemon = True
     traffic_light_thread4.start()
 
+traffic_lights[1].change_green_light_time(3)
 
-lightsChange1()
-lightsChange2()
+def get_greenligth_time(no_of_vehicles):
+    time = 2
+    if no_of_vehicles == 0:
+        return 0
+    elif no_of_vehicles == 1:
+        return time
+    else:
+        time += float(no_of_vehicles-1)*0.15
+    return time
 
-# def lightChangeAlter():
-#     while 1:
-        
+def get_yellowligth_time(no_of_vehicles):
+    time = 1.5
+    if no_of_vehicles == 0:
+        return 0
+    elif no_of_vehicles == 1:
+        return time
+    else:
+        time += float(no_of_vehicles-1)*0.1
+    return time
 
-
-
-# traffic_light_thread5 = threading.Thread(name="initialization5", target=lightChangeAlter, args=())
-# traffic_light_thread5.daemon = True
-# traffic_light_thread5.start()
-
+# lightsChange1()
 
 # def lightsChange2():
 #     traffic_light_thread1 = threading.Thread(name="initialization1", target=initialize_lights, args=(0,))
@@ -190,8 +204,12 @@ while 1:
 
     screen.fill('brown')
 
-    for traffic in traffic_lights:
-        traffic.draw(screen)
+    for i, traffic in enumerate(traffic_lights):
+        count = len(vehicles_stopped[list(vehicles_stopped.keys())[i]])
+        traffic.draw(screen, count)
+    
+    # print(vehicles_stopped[list(vehicles_stopped.keys())[0]])
+    
     # print(f'left light status: {traffic_lights[0].get_status()}')
     # print(f'right light status: {traffic_lights[1].get_status()}')
     # print(f'top light status: {traffic_lights[2].get_status()}')
@@ -206,12 +224,30 @@ while 1:
     # v6.draw(screen)
     # v7.draw(screen)
     # v8.draw(screen)
+    temp_vechiles = vehicles
 
     for vehicle in vehicles:
         vehicle.draw(screen)
         light = find_associate_light(vehicle)
-        vehicle.move(vehicles_dict, light)
-        # if vehicle.pos[0]
+        isMoving = vehicle.move(vehicles_dict, light)
+        if not isMoving:
+            if vehicle not in vehicles_stopped[vehicle.direction]:
+                vehicles_stopped[vehicle.direction].append(vehicle)
+        else:
+            if vehicle in vehicles_stopped[vehicle.direction]: vehicles_stopped[vehicle.direction].remove(vehicle)
+
+        if vehicle.pos[0] <= - 20 or vehicle.pos[0] >= WIDTH + 20 or vehicle.pos[1] <= -20 or vehicle.pos[1] >= WIDTH + 20:
+            temp_vechiles.remove(vehicle)
+            vehicles_dict[vehicle.direction][vehicle.lane].remove(vehicle)
+
+    vehicles = temp_vechiles
+    for i, light in enumerate(traffic_lights):
+        no_of_vehicles = len(vehicles_stopped[list(vehicles_stopped.keys())[i]])
+        greentime = get_greenligth_time(no_of_vehicles)
+        light.change_green_light_time(greentime)
+        yellowtime = get_yellowligth_time(no_of_vehicles)
+        print(greentime)
+        # light.change_yelow_light_time(yellowtime)
 
     # v1.move()
     # v2.move()

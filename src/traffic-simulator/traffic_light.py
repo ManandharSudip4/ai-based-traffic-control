@@ -12,17 +12,18 @@ class TrafficLightStatus(Enum):
 class TrafficLight():
 
     def __init__(self, x, y, txt, color) -> None:
-        pygame.font.get_init()      
-        font1 = pygame.font.SysFont('freesanbold.ttf', 30)
-        self.txt = font1.render(txt, True, (0, 0, 0))
+        pygame.font.get_init()
+        self.text = txt   
+        self.font1 = pygame.font.SysFont('freesanbold.ttf', 30)
+        self.txt = self.font1.render(txt, True, (0, 0, 0))
         self.txt_rect = self.txt.get_rect()
         self.pos = (x, y)
         self.txt_rect.center = self.pos 
         self.status = TrafficLightStatus[color]
         self.radius = 15
-        self.RedTime = 7
-        self.GreenTime = 5
-        self.YellowTime = 2
+        self.RedTime = 9
+        self.GreenTime = 8
+        self.YellowTime = 1
     
     def alterLights1(self, index):
         if index == 0 or index == 1:
@@ -66,7 +67,9 @@ class TrafficLight():
         self.alterLights1(index)
         # print(index)
         self.alterLights2(index)
-        # print(index)
+
+        # self.alterLights1(index)
+
         # sleep(5)
 
     # def changeLights(self):
@@ -74,6 +77,26 @@ class TrafficLight():
     #     # self.alterLights()
     #     sleep(5)
 
-    def draw(self, screen):
+    def change_green_light_time(self, time):
+        self.GreenTime = time
+
+    def change_red_light_time(self, time):
+        self.RedTime = time
+
+    def change_yelow_light_time(self, time):
+        # print(time)
+        self.YellowTime = time
+        # print(self.YellowTime)
+
+    def draw(self, screen, count):
+        count_txt = self.font1.render(str(count), True, (0, 0, 0)) 
+        txt_rect = count_txt.get_rect()
+        if self.text == 'L'  or self.text == 'B':
+            pos = (self.pos[0]-25, self.pos[1])
+        else:
+            pos = (self.pos[0]+25, self.pos[1])
+        txt_rect.center = pos
+
         pygame.draw.circle(screen, self.status.value, center=self.pos, radius=self.radius)
         screen.blit(self.txt, self.txt_rect)
+        screen.blit(count_txt, txt_rect)
